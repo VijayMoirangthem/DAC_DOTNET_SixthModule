@@ -1,0 +1,160 @@
+﻿@model MVC.Models.CourseModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>getCourse</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <br /><br />
+    <br /><br />
+    <div class="container" style="border:1px solid blue; border-radius:15px; padding:30px;">
+        <center><h2>Course</h2></center>
+        <div class="form-group">
+            @Html.LabelFor(X => X.CID, new { @Value = "ID", @class = "form-label" })
+            @Html.TextBoxFor(X => X.CID, new { @class = "form-control", @PlaceHolder = "ID" })
+        </div>
+
+        <br /><br />
+
+        <div class="form-group">
+            @Html.LabelFor(X => X.CName, new { @Value = "Name", @class = "form-label" })
+            @Html.TextBoxFor(X => X.CName, new { @class = "form-control", @PlaceHolder = "Name" })
+        </div>
+
+        <br /><br />
+
+        <div class="form-group">
+            @Html.LabelFor(X => X.CDuration, new { @Value = "Duration", @class = "form-label" })
+            @Html.TextBoxFor(X => X.CDuration, new { @class = "form-control", @PlaceHolder = "Duration" })
+        </div>
+
+        <br /><br />
+
+        <div class="form-group">
+            @Html.LabelFor(X => X.CFees, new { @Value = "Fees", @class = "form-label" })
+            @Html.TextBoxFor(X => X.CFees, new { @class = "form-control", @PlaceHolder = "Fees" })
+        </div>
+
+        <br /><br />
+
+        <div class="form-group">
+            <button onclick="insert()" class="btn btn-primary">Submit</button>
+        </div>
+
+
+    </div>
+    <br /><br />
+    <div class="container">
+        <table style="border-radius:15px;" class="table table-bordered table-hover">
+            <colgroup>
+                <col style="width: 20%;" />
+                <col style="width: 20%;" />
+                <col style="width: 20%;" />
+                <col style="width: 20%;" />
+                <col style="width: 20%;" />
+            </colgroup>
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Duration</th>
+                    <th>Fees</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="Table">
+                @foreach (var CS in ViewBag.Course)
+                {
+                    <tr>
+                        <td>@CS.CID</td>
+                        <td>@CS.CName</td>
+                        <td>@CS.CDuration</td>
+                        <td>@CS.CFees</td>
+                        <td>
+                            <div class="d-flex">
+
+                                <button onclick="deleteOffice('@CS.CID')" class="btn btn-danger">Delete</button>
+
+                                &nbsp;&nbsp;&nbsp;
+
+                                <button type="button" class="btn btn-warning" onclick="populateFields('@CS.CID')">Update</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script>
+        function populateFields(CID) {
+            // AJAX request to fetch employee details
+            fetch(`/Course/getCourseByID?CID=${CID}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Populate form fields with fetched data
+                    document.getElementById('CID').value = data.CID;
+                    document.getElementById('CName').value = data.CName;
+                    document.getElementById('CDuration').value = data.CDuration;
+                    document.getElementById('CFees').value = data.CFees;
+                }).catch(error => console.error('Error:', error));
+        }
+
+
+        function reloadTable() {
+            fetch(`/Course/reloadTable`)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById('Table');
+                    table.innerHTML = '';
+                    data.forEach(course => {
+                        const row = table.insertRow();
+                        // Assuming 'CID', 'CName', 'CDuration', 'CFees' are properties of each course
+                        row.innerHTML = `
+                <td>${course.CID}</td>
+                <td>${course.CName}</td>
+                <td>${course.CDuration}</td>
+                <td>${course.CFees}</td>
+                <td>
+                    <div class="d-flex">
+                        <button onclick="deleteOffice('${course.CID}')" class="btn btn-danger">Delete</button>
+                        &nbsp;&nbsp;&nbsp;
+                        <button type="button" class="btn btn-warning" onclick="populateFields('${course.CID}')">Update</button>
+                    </div>
+                </td>`;
+                    });
+                });
+        }
+
+        async function insert() {
+            const CID = document.getElementById('CID').value;
+            const CName = document.getElementById('CName').value;
+            const CDuration = document.getElementById('CDuration').value;
+            const CFees = document.getElementById('CFees').value;
+            await fetch(`/Course/insertCourse?CID=${CID}&CName=${CName}&CDuration=${CDuration}&CFees=${CFees}`, { method: "POST" });
+            reloadTable();
+            document.getElementById('CID').value = '';
+            document.getElementById('CName').value = '';
+            document.getElementById('CDuration').value = '';
+            document.getElementById('CFees').value = '';
+        }
+
+        async function deleteOffice(CID) {
+            await fetch(`/Course/deleteCourse?CID=${CID}`, { method: "POST" });
+            reloadTable();
+        }
+
+
+
+
+    </script>
+</body>
+</html>
